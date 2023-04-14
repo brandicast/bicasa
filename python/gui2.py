@@ -42,7 +42,7 @@ def getFullPath(item):
 # handle tree item click event
 
 
-class CollectListWidgetItem(QObject):
+class CollectListWidgetItem_Thread(QThread):
     # define Signal to pass the loaded QICon and filename out to QApp level
     signal = Signal(QIcon, str, name='resultReady')
 
@@ -114,13 +114,11 @@ class Window (QMainWindow):
     def onTreeItemClicked(self, item, col):
         logger.debug('onTreeItemClicked')
         self.main_window.listWidget.clear()
-        # key reason  why  it doesn't Destroyed
-        self.workerThread = QThread(parent=self)
-        collect_item_task = CollectListWidgetItem(item)
-        collect_item_task.moveToThread(self.workerThread)
-        collect_item_task.resultReady.connect(win.addListWidgetItem)
-        self.workerThread.started.connect(collect_item_task.run)
-        self.workerThread.start()
+        workerthread = CollectListWidgetItem_Thread(item)
+
+        workerthread.resultReady.connect(win.addListWidgetItem)
+        # self.workerThread.started.connect(collect_item_task.run)
+        workerthread.start()
 
 
 app = QApplication(sys.argv)

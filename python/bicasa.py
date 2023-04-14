@@ -1,7 +1,7 @@
 import setup
 import logging
 
-from gui import *
+from gui2 import *
 
 logger = logging.getLogger(__name__)
 
