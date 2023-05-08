@@ -11,7 +11,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap, QImageReader, QIcon
 
 
-from config_setup import *
+from python.config_reader import *
 import logging
 import logging.config
 

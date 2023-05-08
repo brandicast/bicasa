@@ -1,4 +1,4 @@
-import setup
+from init import *
 import logging
 
 from gui_thread_safe import *

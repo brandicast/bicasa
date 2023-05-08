@@ -1,4 +1,4 @@
-from config_setup import *
+from config_reader import *
 import logging
 import logging.config
 
