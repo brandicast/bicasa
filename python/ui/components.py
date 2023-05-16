@@ -57,17 +57,26 @@ class ImageDisplayWidget(QLabel):
         self.setAlignment(Qt.AlignCenter)
         self.setMinimumSize(1, 1)
         self.__image = None
+        self.s = None
 
     def setImage(self, image):
         self.__image = image
         self.resize(self.sizeHint())
         self.update()
 
+    '''
     def sizeHint(self):
         if self.__image:
             return self.__image.size()  # * self.max_enlargement
         else:
             return QSize(1, 1)
+    '''
+
+    def sizeHint(self):
+        return self.s
+
+    def setSizeHint(self, s):
+        self.s = s
 
     def resizeEvent(self, event):
 
@@ -82,7 +91,7 @@ class ImageDisplayWidget(QLabel):
         newSize = None
         if event.angleDelta().y() > 0:
             logger.debug("Zoom In")
-            if self.pixmap().size().width() < self.sizeHint().width() and self.pixmap().size().height() < self.sizeHint().height():
+            if self.pixmap().size().width() < self.__image.size().width() and self.pixmap().size().height() < self.__image.size().height():
                 newSize = QSize(self.pixmap().size().width() + 100,
                                 self.pixmap().size().height() + 100)
         else:
@@ -94,5 +103,7 @@ class ImageDisplayWidget(QLabel):
             pixmap = QPixmap.fromImage(self.__image)
             scaled = pixmap.scaled(newSize, Qt.KeepAspectRatio)
             self.setPixmap(scaled)
+            logger.info("Label Size is : " + str(self.size()) +
+                        "Pixmap Size is :" + str(newSize))
 
         # return super().wheelEvent(event)
