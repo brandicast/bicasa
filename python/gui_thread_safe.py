@@ -5,12 +5,13 @@ import threading
 
 # QTreeWidget, QFrame
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QListWidgetItem, QListView, QScrollArea, QSizePolicy
-from PySide6.QtCore import QFile, QSize, QThread, Signal, Qt
+from PySide6.QtWidgets import QMainWindow, QTreeWidgetItem, QListWidgetItem, QListView, QAbstractScrollArea, QVBoxLayout, QWidget, QSizePolicy
+from PySide6.QtCore import QFile, QSize
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QPixmap, QImageReader, QIcon, QResizeEvent, QImage
+from PySide6.QtGui import QImageReader, QResizeEvent
 
-from ui.components import ResizeLabel, ImageDisplayWidget
+from ui.pannable_scrollarea import PannableScrollArea
+from ui.zoomable_image_label import Zoomable_Image_Label
 
 from config_reader import *
 from handle_treewidget import *
@@ -47,6 +48,7 @@ class Window (QMainWindow):
         self.main_window.listWidget.setViewMode(QListView.IconMode)
         self.main_window.listWidget.setIconSize(QSize(150, 150))
         self.main_window.listWidget.setResizeMode(QListView.Adjust)
+        self.main_window.listWidget.setSpacing(3)
 
         # main_window.listWidget.setUniformItemSizes(True)
 
@@ -92,29 +94,30 @@ class Window (QMainWindow):
                 self.main_window.tabWidget.setCurrentIndex(duplicated_index)
             else:
 
-                pic = ImageDisplayWidget()
+                pic = Zoomable_Image_Label()
+
+                pic.setSizeHint(self.main_window.listWidget.size())
 
                 reader = QImageReader(item.statusTip())
                 reader.setAutoTransform(True)
                 image = reader.read()  # QImage
                 pic.setImage(image)
-                # pic.setMargin(10)
 
-                '''
-                
-                scrollarea = QScrollArea()
-                print(scrollarea.size())
-                print(pic.size())
-                print(self.main_window.tabWidget.size())
+                scrollarea = PannableScrollArea()
                 scrollarea.setWidget(pic)
-                scrollarea.setMinimumSize(self.main_window.tabWidget.size())
-                scrollarea.resize(self.main_window.tabWidget.size())
-                scrollarea.setSizePolicy(
-                    QSizePolicy.Expanding, QSizePolicy.Expanding)
-                '''
+                scrollarea.setWidgetResizable(False)
+
+                pic.mousePressEvent = scrollarea.mouse_press
+                pic.mouseMoveEvent = scrollarea.mouse_move
+                pic.mouseReleaseEvent = scrollarea.mouse_release
+
+                logger.debug(self.main_window.tabWidget.size())
+                logger.debug(self.main_window.listWidget.size())
+                logger.debug(pic.size())
+                logger.debug(scrollarea.size())
 
                 index = self.main_window.tabWidget.addTab(
-                    pic, item.text())
+                    scrollarea, item.text())
                 # Trying to use statusTip as id of the tab.   To avoid the same picture is opened twice
                 self.main_window.tabWidget.setTabToolTip(
                     index, item.statusTip())
@@ -143,12 +146,3 @@ class Window (QMainWindow):
         workerthread.resultReady.connect(self.addListWidgetItem)
         # self.workerThread.started.connect(collect_item_task.run)
         workerthread.start()
-
-
-'''
-    def resizeEvent(self, event: QResizeEvent):
-        logger.debug(event)
-        logger.debug(self.main_window.listWidget.size())
-        return super().resizeEvent(event)
-
-'''

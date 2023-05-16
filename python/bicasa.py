@@ -1,6 +1,6 @@
 from init import *
 import logging
-
+from PySide6.QtWidgets import QApplication
 from gui_thread_safe import *
 
 logger = logging.getLogger(__name__)
