@@ -143,8 +143,108 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionConfiguration"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuAI">
+    <property name="title">
+     <string>View</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuA_I">
+    <property name="title">
+     <string>A.I.</string>
+    </property>
+    <widget class="QMenu" name="menuFace_Detection">
+     <property name="title">
+      <string>Face Detection</string>
+     </property>
+     <widget class="QMenu" name="menuInstant_Detect">
+      <property name="title">
+       <string>Instant Detect</string>
+      </property>
+      <addaction name="actionFaceEnable"/>
+      <addaction name="actionFaceDisable"/>
+     </widget>
+     <addaction name="menuInstant_Detect"/>
+     <addaction name="actionFull_Detect"/>
+    </widget>
+    <addaction name="menuFace_Detection"/>
+    <addaction name="actionFaces_Boook"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Filters</string>
+    </property>
+    <addaction name="actionFilters"/>
+    <addaction name="actionCrop"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp_2">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuAI"/>
+   <addaction name="menuA_I"/>
+   <addaction name="menuHelp"/>
+   <addaction name="menuHelp_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionConfiguration">
+   <property name="text">
+    <string>Configuration</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionFaceEnable">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable</string>
+   </property>
+  </action>
+  <action name="actionFaceDisable">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Disable</string>
+   </property>
+  </action>
+  <action name="actionFull_Detect">
+   <property name="text">
+    <string>Full Detect</string>
+   </property>
+  </action>
+  <action name="actionFaces_Boook">
+   <property name="text">
+    <string>Faces Boook</string>
+   </property>
+  </action>
+  <action name="actionFilters">
+   <property name="text">
+    <string>Resize</string>
+   </property>
+  </action>
+  <action name="actionCrop">
+   <property name="text">
+    <string>Crop</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -8,19 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# iterate thru all parent of the tree item to get the full path
-
-
-def getFullPath(item):
-    x = item
-    path_str = item.text(0)
-
-    while x.parent():
-        x = x.parent()
-        path_str = str(Path(x.text(0)).joinpath(
-            path_str))  # May be optimized a bit?
-    return path_str
-
 # handle tree item click event
 
 
@@ -68,3 +55,16 @@ class CollectListWidgetItem_Thread(QThread):
                     logger.error('Reading ' + entry.name + ' with error !')
             else:
                 break
+
+# iterate thru all parent of the tree item to get the full path
+
+
+def getFullPath(item):
+    x = item
+    path_str = item.text(0)
+
+    while x.parent():
+        x = x.parent()
+        path_str = str(Path(x.text(0)).joinpath(
+            path_str))  # May be optimized a bit?
+    return path_str

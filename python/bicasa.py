@@ -19,4 +19,6 @@ print(screen.virtualSize())
 win = Window()
 win.showMaximized()
 win.show()
+
+
 sys.exit(app.exec())
