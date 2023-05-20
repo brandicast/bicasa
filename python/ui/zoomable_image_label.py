@@ -7,6 +7,8 @@ import cv2
 from utils.opencv_util import cv2_loadimage
 from utils.ai import AI
 
+import sys
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -27,16 +29,7 @@ class Zoomable_Image_Label(QLabel):
         reader = QImageReader(image_path)
         reader.setAutoTransform(True)
         self.image = reader.read()  # QImage
-        pixmap = self.imageToPixmap()
-        scaled = pixmap.scaled(self.size(), Qt.KeepAspectRatio)
-        self.setPixmap(scaled)
-
-    # Reset pixmap to origin image
-    def reset(self):
-        if self.image != None:
-            pixmap = self.imageToPixmap()
-            scaled = pixmap.scaled(self.size(), Qt.KeepAspectRatio)
-            self.setPixmap(scaled)
+        self.imageToPixmap()
 
     # Return image as QImage
     def Image(self):
@@ -46,24 +39,18 @@ class Zoomable_Image_Label(QLabel):
         if self.image != None:
             return self.image.size()
 
-    def imageToPixmap(self):
-        return QPixmap.fromImage(self.image)
-
-    '''
-    # Need the following 2 functions because when initialized, need this for initial size
-    def setSizeHint(self, sizeHint):
-        self.size_hint = sizeHint
-        self.resizeLabel(sizeHint)
-    '''
+    def imageToPixmap(self, size=None):
+        if size == None:
+            size = self.size()
+        pixmap = QPixmap.fromImage(self.image)
+        scaled = pixmap.scaled(size, Qt.KeepAspectRatio)
+        self.setPixmap(scaled)
 
     def resizePixmap(self, size):
         logger.debug(f"Resizing Pixmap to {size}")
-
         logger.debug(
             f"Label size is: {self.size()}, origin pixmap size is: {self.pixmap().size()}, resizing pixmap to: {size}" + " and is called by " + inspect.stack()[1].function)
-        pixmap = self.imageToPixmap()
-        scaled = pixmap.scaled(size, Qt.KeepAspectRatio)
-        self.setPixmap(scaled)
+        self.imageToPixmap(size)
 
     def resizeLabel(self, size):
         logger.debug(f"Resizing Label to {size}")
@@ -99,89 +86,88 @@ class Zoomable_Mat_Label(Zoomable_Image_Label):
 
     def __init__(self):
         super().__init__()
-        self.face_coordiates = None
+        self.face_coordinates = None
         self.detected = False
+        self.enable_face_detect = False
         self.t = None
 
     # [Override] Load Image as OpenCV Mat
 
     def setImagePath(self, image_path):
         try:
-            logger.debug("A")
             self.image = cv2_loadimage(image_path, cv2.IMREAD_COLOR)
-            logger.debug("B")
-            self.updateMatToPixmap(self.image)
-            logger.debug("C")
+            self.imageToPixmap()
+
         except Exception as e:
             logger.error(e)
 
-    # [Override]
+    # [Override to Mat]
     def getImageSize(self) -> QSize:
         return QSize(self.image.shape[1], self.image.shape[0])
 
     # [Override]
-    def imageToPixmap(self):
-        qimage = self.__Mat_To_QImage__(self.image)
-        return QPixmap.fromImage(qimage)
+    def imageToPixmap(self, size=None):
+        try:
+            mat = self.image.copy()
+            if self.enable_face_detect:
+                mat = self.drawFaces()
+            if size == None:
+                size = self.size()
+            qimage = self.__Mat_To_QImage__(mat)
+            pixmap = QPixmap.fromImage(qimage)
+            scaled = pixmap.scaled(size, Qt.KeepAspectRatio)
+            self.setPixmap(scaled)
+        except Exception as e:
+            logger.debug(e)
 
+    '''
     # [Override] Need to check if the image is not initialized
     def reset(self):
         pixmap = self.imageToPixmap()
         scaled = pixmap.scaled(self.size(), Qt.KeepAspectRatio)
         self.setPixmap(scaled)
+    '''
 
     def enableFaceDetect(self, enable: bool):
         logger.debug(f"{enable} and {self.detected}")
-        if enable and not self.detected:
+        self.enable_face_detect = enable
+        if self.enable_face_detect and not self.detected:
             logger.debug("Detecting Face.....")
             self.findFaces()
             self.detected = True
-        elif not enable and self.detected:
-            logger.debug("Reset Detecting Face.....")
-            self.reset()
-            self.detected = False
+        else:
+            self.imageToPixmap()
 
-    # This is when Mat is temperary being changed and want to keep the origin mat
-    # May change to graphic item instead
-
-    def updateMatToPixmap(self, mat):
-        try:
-            qimage = self.__Mat_To_QImage__(mat)
-            logger.debug("W")
-            pixmap = QPixmap.fromImage(qimage)
-            logger.debug("F")
-            scaled = pixmap.scaled(self.size(), Qt.KeepAspectRatio)
-            self.setPixmap(scaled)
-            logger.debug("G")
-        except Exception as e:
-            logger.debug(e)
-
+    # * Using mat to initialize QImage, the parameter is mat data, mat width, mat height, "steps" and format
+    #   without "steps", when converting QImage to Pixmap using Pixmap.fromImage, it crashes without error on certain JPEG files.
+    #   steps, according to Googled, is width * 3.   Need to check further for what it stands for.  Works for now
     def __Mat_To_QImage__(self, mat):
         try:
-            logger.debug(f"D :  {mat.shape} ")
             qimage = QImage(mat, mat.shape[1],
-                            mat.shape[0], QImage.Format_BGR888)
-            logger.debug(f"E : {type(qimage)}")
+                            mat.shape[0], 3 * mat.shape[1], QImage.Format_BGR888)
         except Exception as e:
             logger.debug(e)
         return qimage
 
     def findFaces(self):
-        if self.face_coordiates is None:
+        if self.face_coordinates is None:
             self.t = FaceFinder(self.image)
-            self.t.resultReady.connect(self.drawFaces)
+            self.t.resultReady.connect(self.collectFaceCoordinates)
             self.t.start()
-        else:
-            self.drawFaces(self.face_coordiates)
 
-    def drawFaces(self, face_coordinates):
-        if len(face_coordinates) > 0:
-            self.face_coordiates = face_coordinates
+    def drawFaces(self):
+        if len(self.face_coordinates) > 0:
             mat = self.image.copy()
-            for face_area in face_coordinates:
+            for face_area in self.face_coordinates:
                 mat = cv2.rectangle(mat, (face_area['x'], face_area['y']), (
                     face_area['x']+face_area['w'], face_area['y']+face_area['h']), (255, 0, 255), 3)
-            self.updateMatToPixmap(mat)
+            return mat
+        else:
+            return self.image
+
+    def collectFaceCoordinates(self, face_coordinates):
+        self.face_coordinates = face_coordinates
+        self.imageToPixmap()
 
 
 class FaceFinder(QThread):

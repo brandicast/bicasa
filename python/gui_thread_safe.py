@@ -64,6 +64,7 @@ class Window (QMainWindow):
 
         # when tab is close
         self.main_window.tabWidget.tabCloseRequested.connect(self.onCloseTab)
+
         self.main_window.tabWidget.currentChanged.connect(self.onTabChanged)
 
         # Menu Actions
@@ -115,6 +116,7 @@ class Window (QMainWindow):
                 scrollarea.resize(self.main_window.listWidget.size())
                 logger.debug("Before")
                 pic = Zoomable_Mat_Label()
+                # pic = Zoomable_Image_Label()
                 # pic.setSizeHint(self.main_window.listWidget.size())
                 pic.resize(scrollarea.size())
                 pic.setImagePath(item.statusTip())
@@ -184,10 +186,3 @@ class Window (QMainWindow):
         self.main_window.menuA_I.hide()
         self.main_window.menuFace_Detection.hide()
         # self.main_window.menuInstant_Detect.show()
-
-    '''
-    def handleFaceDetection(self):
-        logger.debug(
-            "Hi ! " + str(self.main_window.actionFaceEnable.isChecked()))
-
-    '''
