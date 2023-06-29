@@ -3,11 +3,10 @@ from PySide6.QtWidgets import QLabel, QSizePolicy
 from PySide6.QtGui import Qt, QPixmap, QImageReader, QImage
 from PySide6.QtCore import QSize, QObject, Signal, QThread
 
+
 import cv2
 from utils.opencv_util import cv2_loadimage
 from utils.ai import AI
-
-import sys
 
 
 import logging
@@ -86,15 +85,17 @@ class Zoomable_Mat_Label(Zoomable_Image_Label):
 
     def __init__(self):
         super().__init__()
-        self.face_coordinates = None
+        self.faces = None
         self.detected = False
         self.enable_face_detect = False
         self.t = None
+        self.path = None
 
     # [Override] Load Image as OpenCV Mat
 
     def setImagePath(self, image_path):
         try:
+            self.path = image_path
             self.image = cv2_loadimage(image_path, cv2.IMREAD_COLOR)
             self.imageToPixmap()
 
@@ -150,35 +151,39 @@ class Zoomable_Mat_Label(Zoomable_Image_Label):
         return qimage
 
     def findFaces(self):
-        if self.face_coordinates is None:
-            self.t = FaceFinder(self.image)
+        if self.faces is None:
+            self.t = FaceFinder(self.path, self.image)
+            self.t
             self.t.resultReady.connect(self.collectFaceCoordinates)
             self.t.start()
 
     def drawFaces(self):
-        if len(self.face_coordinates) > 0:
+        if self.faces is not None and len(self.faces) > 0:
             mat = self.image.copy()
-            for face_area in self.face_coordinates:
+            for face in self.faces:
+                face_area = face.coordinates
                 mat = cv2.rectangle(mat, (face_area['x'], face_area['y']), (
                     face_area['x']+face_area['w'], face_area['y']+face_area['h']), (255, 0, 255), 3)
             return mat
         else:
             return self.image
 
-    def collectFaceCoordinates(self, face_coordinates):
-        self.face_coordinates = face_coordinates
+    def collectFaceCoordinates(self, faces):
+        self.faces = faces
         self.imageToPixmap()
 
 
 class FaceFinder(QThread):
     signal = Signal(list, name='resultReady')
 
-    def __init__(self, mat):
+    # was only mat, but then need the image path as id in database
+    def __init__(self, image_path, mat):
         self.mat = mat
+        self.path = image_path
         super().__init__()
 
     def run(self):
         ai = AI()
-        face_coordiates = ai.findFaces(self.mat)
-        if len(face_coordiates) > 0:
-            self.signal.emit(face_coordiates)
+        faces = ai.findFaces(self.path, self.mat)
+        if len(faces) > 0:
+            self.signal.emit(faces)

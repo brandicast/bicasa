@@ -1,22 +1,17 @@
-import sys
-
-import threading
-
-
-# QTreeWidget, QFrame
 
 from PySide6.QtWidgets import QMainWindow, QTreeWidgetItem, QListWidgetItem, QListView, QApplication, QVBoxLayout, QWidget, QSizePolicy
 from PySide6.QtCore import QFile, QSize
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QImageReader, QResizeEvent
+# from PySide6.QtGui import QImageReader, QResizeEvent
 
 from ui.pannable_scrollarea import PannableScrollArea
 from ui.zoomable_image_label import Zoomable_Image_Label, Zoomable_Mat_Label
+from ui.photo_label import Photo_Label
 
 from config_reader import *
 from handle_treewidget import *
 from handle_listwidget import *
-from handle_face_detect_thread import FaceDetect_Thread
+# from handle_face_detect_thread import FaceDetect_Thread
 
 import logging
 # import logging.config
@@ -115,7 +110,7 @@ class Window (QMainWindow):
                 scrollarea = PannableScrollArea()
                 scrollarea.resize(self.main_window.listWidget.size())
                 logger.debug("Before")
-                pic = Zoomable_Mat_Label()
+                pic = Photo_Label()
                 # pic = Zoomable_Image_Label()
                 # pic.setSizeHint(self.main_window.listWidget.size())
                 pic.resize(scrollarea.size())

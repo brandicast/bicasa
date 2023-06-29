@@ -4,6 +4,9 @@ import numpy
 import math
 from deepface import DeepFace
 
+from utils.data_objects import FaceData, PhotoData
+from database import DB
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -21,36 +24,53 @@ class AI():
         ]
         self.backend_index = 4
 
-    def findFaces(self, mat: numpy.ndarray):
-        representations = None
-        try:
-            representations = DeepFace.represent(
-                mat, detector_backend=self.backends[self.backend_index])
-        except:
-            logger.debug("Deepface represent found error ! ")
-            representations = list()
+    def findFaces(self, photo_data: PhotoData):
 
-        logger.debug(str(len(representations)) +
-                     " face(s) found ! ")
+        db = DB.get_instance()
 
-        face_coordinates = list()
+        # return None if the photo hasn't been checked
+        # return empty list if photo has been checked and no faces found
+        faces = db.getFaces(photo_data.photo_id)
 
-        if len(representations) > 0:
-            faces_array = []
-            for representation in representations:
+        if faces is None:
+            try:
+                representations = DeepFace.represent(
+                    photo_data.binary, detector_backend=self.backends[self.backend_index])
+            except:
+                logger.debug("Deepface represent found error ! ")
+                representations = list()
 
-                face_area = representation["facial_area"]
-                logger.debug(face_area)
-                face_coordinates.append(face_area)
+            logger.debug(str(len(representations)) +
+                         " face(s) found ! ")
 
-                face_thumbnail = self.getNormalizedFaceImage(
-                    mat, face_area)
-                single_face = {}
-                single_face["representation"] = representation
-                single_face["thumbnail"] = face_thumbnail
-                faces_array.append(single_face)
+            faces = []
 
-        return face_coordinates
+            if len(representations) > 0:
+
+                for representation in representations:
+                    one_face = FaceData()
+
+                    one_face.photo_id = photo_data.photo_id
+
+                    one_face.photo_path = photo_data.fullpath
+
+                    one_face.coordinates = representation["facial_area"]
+                    logger.debug(one_face.coordinates)
+
+                    one_face.thumbnail = self.getNormalizedFaceImage(
+                        photo_data.binary, one_face.coordinates)
+
+                    one_face.embedding = representation["embedding"]
+
+                    faces.append(one_face)
+
+                # Add faces into database
+                 # db.insertFaces(photo_data)
+                db.addFaces(faces)
+
+        photo_data.faces = faces
+
+        return faces
 
     def getNormalizedFaceImage(self, mat, coordinates):
         thumbnail_size = 90
