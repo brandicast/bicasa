@@ -116,8 +116,10 @@ class Window (QMainWindow):
                 scrollarea.resize(self.main_window.listWidget.size())
                 logger.debug("Before")
                 pic = Photo_Label()
-                pic.start_animation.connect(self.startLoadingAnimate)
-                pic.stop_animation.connect(self.stopLoadingAnimate)
+                pic.start_animation.connect(
+                    self.statusWidget.startLoadingAnimation)
+                pic.stop_animation.connect(
+                    self.statusWidget.stopLoadingAnimation)
 
                 # pic = Zoomable_Image_Label()
                 # pic.setSizeHint(self.main_window.listWidget.size())
@@ -178,8 +180,9 @@ class Window (QMainWindow):
         else:
             self.main_window.actionFaceEnable.toggle()
 
-        self.main_window.tabWidget.currentWidget().widget().enableFaceDetect(
-            self.main_window.actionFaceEnable.isChecked())
+        if type(self.main_window.tabWidget.currentWidget()) is PannableScrollArea:
+            self.main_window.tabWidget.currentWidget().widget().enableFaceDetect(
+                self.main_window.actionFaceEnable.isChecked())
 
         self.main_window.menuA_I.show()
         self.main_window.menuFace_Detection.show()
@@ -189,18 +192,3 @@ class Window (QMainWindow):
         self.main_window.menuA_I.hide()
         self.main_window.menuFace_Detection.hide()
         # self.main_window.menuInstant_Detect.show()
-
-    def startLoadingAnimate(self):
-        self.animation.play()
-        self.animation.start()
-        self.loading_label.setMovie(self.movie)
-        self.movie.start()
-
-        self.statusWidget.startLoadingAnimation()
-
-    def stopLoadingAnimate(self):
-        self.animation.stop_play()
-        self.movie.stop()
-        self.loading_label.clear()
-
-        self.statusWidget.stopLoadingAnimation()
