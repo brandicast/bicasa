@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class Photo_Label (QLabel):
+    animate_start_signal = Signal(bool, name='start_animation')
+    animate_stop_signal = Signal(bool, name='stop_animation')
+
     def __init__(self):
         super().__init__()
 
@@ -146,6 +149,7 @@ class Photo_Label (QLabel):
             self.imageToPixmap()
 
     def findFaces(self):
+        self.animate_start_signal.emit(True)
         self.t = FaceFinder(self.photo_data)
         self.t.resultReady.connect(self.collectFaceCoordinates)
         self.t.start()
@@ -163,6 +167,7 @@ class Photo_Label (QLabel):
 
     def collectFaceCoordinates(self, faces):
         self.faces = faces
+        self.animate_stop_signal.emit(True)
         self.imageToPixmap()
 
 

@@ -1,12 +1,13 @@
 
-from PySide6.QtWidgets import QMainWindow, QTreeWidgetItem, QListWidgetItem, QListView, QApplication, QVBoxLayout, QWidget, QSizePolicy
+from PySide6.QtWidgets import QMainWindow, QTreeWidgetItem, QListWidgetItem, QListView, QApplication, QLabel, QVBoxLayout, QWidget, QSizePolicy
 from PySide6.QtCore import QFile, QSize
 from PySide6.QtUiTools import QUiLoader
-# from PySide6.QtGui import QImageReader, QResizeEvent
+from PySide6.QtGui import QMovie
 
 from ui.pannable_scrollarea import PannableScrollArea
 from ui.zoomable_image_label import Zoomable_Image_Label, Zoomable_Mat_Label
 from ui.photo_label import Photo_Label
+from ui.status_widget import StatusWidget
 
 from config_reader import *
 from handle_treewidget import *
@@ -23,6 +24,7 @@ class Window (QMainWindow):
     def __init__(self, parent=None):
         logger.info("Init MainWindow")
         super().__init__(parent)
+        self.setObjectName("MainWindow")
         ui_file = QFile(config["gui"]["design"])
         ui_file.open(QFile.ReadOnly)
 
@@ -73,6 +75,9 @@ class Window (QMainWindow):
         self.main_window.actionFaceDisable.triggered.connect(
             self.toggleInstanceFaceDetection)
 
+        # status bar
+        self.statusWidget = StatusWidget(self.main_window.statusbar)
+
     def addListWidgetItem(self, icon, path, isStopped):
         if not isStopped:
             list_widget_item = QListWidgetItem(icon, path.name)
@@ -111,6 +116,9 @@ class Window (QMainWindow):
                 scrollarea.resize(self.main_window.listWidget.size())
                 logger.debug("Before")
                 pic = Photo_Label()
+                pic.start_animation.connect(self.startLoadingAnimate)
+                pic.stop_animation.connect(self.stopLoadingAnimate)
+
                 # pic = Zoomable_Image_Label()
                 # pic.setSizeHint(self.main_window.listWidget.size())
                 pic.resize(scrollarea.size())
@@ -181,3 +189,18 @@ class Window (QMainWindow):
         self.main_window.menuA_I.hide()
         self.main_window.menuFace_Detection.hide()
         # self.main_window.menuInstant_Detect.show()
+
+    def startLoadingAnimate(self):
+        self.animation.play()
+        self.animation.start()
+        self.loading_label.setMovie(self.movie)
+        self.movie.start()
+
+        self.statusWidget.startLoadingAnimation()
+
+    def stopLoadingAnimate(self):
+        self.animation.stop_play()
+        self.movie.stop()
+        self.loading_label.clear()
+
+        self.statusWidget.stopLoadingAnimation()
