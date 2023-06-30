@@ -131,3 +131,8 @@ dmypy.json
 
 # Custom
 .$*
+.vscode/
+.vscode/settings.json
+.gitignore
+*.drawio
+.vscode/settings.json
