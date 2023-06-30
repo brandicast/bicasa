@@ -89,7 +89,6 @@ class DB ():
             metadata.last_access_Time = row[4]
             metadata.exif = row[5]
         conn.close()
-        logger.debug(metadata)
         return metadata
 
     def getFaces(self, photo_id):
