@@ -15,13 +15,14 @@ class StatusWidget (QWidget):
         self.info_label = QLabel("info")
         self.msg_label = QLabel("msg")
         self.loading_label = QLabel()
-        loading_icon = config['app']['loading_gif']
+        from pathlib import Path
+        loading_icon = str(Path(__file__).parent.parent / config['app']['loading_gif'])
         logger.debug("Loading_icon : " + loading_icon)
 
         self.loading_label.setFixedSize(30, 20)
         # loadingBar.setStyleSheet("border: 1px solid black;")
         self.loading_label.setScaledContents(True)
-        self.movie = QMovie('ui/loading.gif')
+        self.movie = QMovie(loading_icon)
 
         '''
         layout = QHBoxLayout()

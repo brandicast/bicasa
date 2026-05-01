@@ -24,7 +24,7 @@ class FaceDetect_Thread(QThread):
         self.stop_flag = stop
 
     def setDectect(self, detect: bool):
-        self.isDetect = bool
+        self.isDetect = detect
 
     def run(self):
         logger.debug('run FaceDetect_Thread')

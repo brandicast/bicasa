@@ -20,6 +20,9 @@ import traceback
 import logging
 logger = logging.getLogger(__name__)
 
+# Global list to keep track of running threads to prevent GC during widget destruction
+_global_running_threads = []
+
 
 class Photo_Label (QLabel):
     animate_start_signal = Signal(bool, name='start_animation')
@@ -149,10 +152,24 @@ class Photo_Label (QLabel):
             self.imageToPixmap()
 
     def findFaces(self):
+        if self.worker_thread and self.worker_thread.isRunning():
+            logger.debug("Face detection already running for this image.")
+            return
+
         self.animate_start_signal.emit(True)
-        self.t = FaceFinder(self.photo_data)
-        self.t.resultReady.connect(self.collectFaceCoordinates)
-        self.t.start()
+        self.worker_thread = FaceFinder(self.photo_data)
+        # Keep a reference to prevent GC while running
+        _global_running_threads.append(self.worker_thread)
+        
+        self.worker_thread.resultReady.connect(self.collectFaceCoordinates)
+        self.worker_thread.finished.connect(lambda: self._cleanup_thread(self.worker_thread))
+        self.worker_thread.start()
+
+    def _cleanup_thread(self, thread):
+        if thread in _global_running_threads:
+            _global_running_threads.remove(thread)
+        if thread == self.worker_thread:
+            self.worker_thread = None
 
     def drawFaces(self):
         if self.photo_data.faces is not None and len(self.photo_data.faces) > 0:
@@ -166,9 +183,14 @@ class Photo_Label (QLabel):
             return self.photo_data.binary
 
     def collectFaceCoordinates(self, faces):
-        self.faces = faces
-        self.animate_stop_signal.emit(True)
-        self.imageToPixmap()
+        try:
+            # Check if the widget is still alive (not deleted)
+            self.photo_data.faces = faces
+            self.animate_stop_signal.emit(True)
+            self.imageToPixmap()
+        except RuntimeError:
+            # Widget might have been deleted
+            pass
 
 
 class FaceFinder(QThread):

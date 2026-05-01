@@ -4,8 +4,9 @@ import logging.config
 
 
 try:
+    logging_conf_path = str(BASE_DIR / config["logging"]["config_file"])
     logging.config.fileConfig(
-        fname=config["logging"]["config_file"], disable_existing_loggers=False)
+        fname=logging_conf_path, disable_existing_loggers=False)
 except:
     print("Initialize logging error")
 
